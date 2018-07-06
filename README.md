@@ -4,6 +4,6 @@ Implementation of the material design pattern for [feature discovery](https://ma
 Import into your project by adding the following dependency:
 ```yaml
 feature_discovery:
-    git:
-      url: git://github.com/darter/feature_discovery.git
+  git:
+    url: git://github.com/darter/feature_discovery.git
 ```
