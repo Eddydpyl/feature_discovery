@@ -7,20 +7,20 @@ import 'package:flutter/material.dart';
 
 /// Places and centers the [child] around the [position].
 class CenterAbout extends StatelessWidget {
-
   final Offset position;
   final Widget child;
 
   CenterAbout({
+    key,
     this.position,
     this.child,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      top: position.dy,
       left: position.dx,
+      top: position.dy,
       child: FractionalTranslation(
         translation: const Offset(-0.5, -0.5),
         child: child,

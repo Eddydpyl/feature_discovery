@@ -9,47 +9,63 @@ import 'package:flutter/material.dart';
 /// so that it can be used for placing Widgets relative to it.
 class AnchoredOverlay extends StatelessWidget {
   final bool showOverlay;
-  final Widget Function(BuildContext, Offset anchor) overlayBuilder;
+  final Widget Function(BuildContext, Rect anchorBounds, Offset anchor)
+      overlayBuilder;
   final Widget child;
 
   AnchoredOverlay({
-    this.showOverlay,
+    key,
+    this.showOverlay = false,
     this.overlayBuilder,
     this.child,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      // This LayoutBuilder gives us the opportunity to measure the above
+      // Container to calculate the "anchor" point at its center.
       child: LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) {
-            return OverlayBuilder(
-              showOverlay: showOverlay,
-              overlayBuilder: (BuildContext overlayContext) {
-                RenderBox box = context.findRenderObject() as RenderBox;
-                final center = box.size.center(box.localToGlobal(const Offset(0.0, 0.0)));
-                return overlayBuilder(overlayContext, center);
-              },
-              child: child,
-            );
-          }),
+        builder: (BuildContext context, BoxConstraints constraints) {
+          return OverlayBuilder(
+            showOverlay: showOverlay,
+            overlayBuilder: (BuildContext overlayContext) {
+              // To calculate the "anchor" point we grab the render box of
+              // our parent Container and then we find the center of that box.
+              RenderBox box = context.findRenderObject() as RenderBox;
+              final topLeft =
+                  box.size.topLeft(box.localToGlobal(const Offset(0.0, 0.0)));
+              final bottomRight = box.size
+                  .bottomRight(box.localToGlobal(const Offset(0.0, 0.0)));
+              final Rect anchorBounds = Rect.fromLTRB(
+                topLeft.dx,
+                topLeft.dy,
+                bottomRight.dx,
+                bottomRight.dy,
+              );
+              final anchorCenter = box.size.center(topLeft);
+
+              return overlayBuilder(overlayContext, anchorBounds, anchorCenter);
+            },
+            child: child,
+          );
+        },
+      ),
     );
   }
 }
 
-/// Places the Widget built using the [overlayBuilder] on top of the overlay,
-/// that is, on top of everything else. It's completely transparent to the
-/// Widget tree, in that the [child] will be rendered as if it wasn't there.
 class OverlayBuilder extends StatefulWidget {
   final bool showOverlay;
-  final Function(BuildContext) overlayBuilder;
+  final Widget Function(BuildContext) overlayBuilder;
   final Widget child;
 
   OverlayBuilder({
+    key,
     this.showOverlay = false,
     this.overlayBuilder,
     this.child,
-  });
+  }) : super(key: key);
 
   @override
   _OverlayBuilderState createState() => _OverlayBuilderState();
@@ -61,21 +77,22 @@ class _OverlayBuilderState extends State<OverlayBuilder> {
   @override
   void initState() {
     super.initState();
+
     if (widget.showOverlay) {
-      showOverlay();
+      WidgetsBinding.instance.addPostFrameCallback((_) => showOverlay());
     }
   }
 
   @override
   void didUpdateWidget(OverlayBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
-    syncWidgetOverlay();
+    WidgetsBinding.instance.addPostFrameCallback((_) => syncWidgetAndOverlay());
   }
 
   @override
   void reassemble() {
     super.reassemble();
-    syncWidgetOverlay();
+    WidgetsBinding.instance.addPostFrameCallback((_) => syncWidgetAndOverlay());
   }
 
   @override
@@ -83,24 +100,23 @@ class _OverlayBuilderState extends State<OverlayBuilder> {
     if (isShowingOverlay()) {
       hideOverlay();
     }
-    super.dispose();
-  }
 
-  void syncWidgetOverlay() {
-    if (isShowingOverlay() && !widget.showOverlay) {
-      hideOverlay();
-    } else if (!isShowingOverlay() && widget.showOverlay) {
-      showOverlay();
-    }
+    super.dispose();
   }
 
   bool isShowingOverlay() => overlayEntry != null;
 
   void showOverlay() {
-    overlayEntry = OverlayEntry(
-      builder: widget.overlayBuilder,
-    );
-    addToOverlay(overlayEntry);
+    if (overlayEntry == null) {
+      // Create the overlay.
+      overlayEntry = OverlayEntry(
+        builder: widget.overlayBuilder,
+      );
+      addToOverlay(overlayEntry);
+    } else {
+      // Rebuild overlay.
+      WidgetsBinding.instance.addPostFrameCallback((_) => buildOverlay());
+    }
   }
 
   void addToOverlay(OverlayEntry entry) async {
@@ -108,13 +124,28 @@ class _OverlayBuilderState extends State<OverlayBuilder> {
   }
 
   void hideOverlay() {
-    overlayEntry.remove();
-    overlayEntry = null;
+    if (overlayEntry != null) {
+      overlayEntry.remove();
+      overlayEntry = null;
+    }
+  }
+
+  void syncWidgetAndOverlay() {
+    if (isShowingOverlay() && !widget.showOverlay) {
+      hideOverlay();
+    } else if (!isShowingOverlay() && widget.showOverlay) {
+      showOverlay();
+    }
+  }
+
+  void buildOverlay() async {
+    overlayEntry?.markNeedsBuild();
   }
 
   @override
   Widget build(BuildContext context) {
-    overlayEntry?.markNeedsBuild();
+    WidgetsBinding.instance.addPostFrameCallback((_) => buildOverlay());
+
     return widget.child;
   }
 }

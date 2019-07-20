@@ -9,13 +9,12 @@ import 'overlay.dart';
 
 /// A static class used to coordinate the use of several [DescribedFeatureOverlay].
 /// Can be placed anywhere in the widget tree, but only accessed by its children.
-///
+
 /// A List must be kept containing the IDs of the [DescribedFeatureOverlay] that
 /// this class will be handling. The order in which they appear is determined
 /// by the order of their IDs inside of said List. The animation can be started
 /// by calling [discoverFeatures], everything else is handled internally.
 class FeatureDiscovery extends StatefulWidget {
-
   /// Returns the identifier of the currently active step, and adds the [context]
   /// to the registered listeners of the [_InheritedFeatureDiscovery].
   static String activeStep(BuildContext context) {
@@ -27,7 +26,7 @@ class FeatureDiscovery extends StatefulWidget {
   /// Triggers the sequence of [DescribedFeatureOverlay] as identified by [steps].
   static void discoverFeatures(BuildContext context, List<String> steps) {
     _FeatureDiscoveryState state =
-        context.ancestorStateOfType(new TypeMatcher<_FeatureDiscoveryState>())
+        context.ancestorStateOfType(TypeMatcher<_FeatureDiscoveryState>())
             as _FeatureDiscoveryState;
     state.discoverFeatures(steps);
   }
@@ -36,7 +35,7 @@ class FeatureDiscovery extends StatefulWidget {
   /// implemented internally, to be called when the feature is activated.
   static void markStepComplete(BuildContext context, String stepId) {
     _FeatureDiscoveryState state =
-        context.ancestorStateOfType(new TypeMatcher<_FeatureDiscoveryState>())
+        context.ancestorStateOfType(TypeMatcher<_FeatureDiscoveryState>())
             as _FeatureDiscoveryState;
     state.markStepComplete(stepId);
   }
@@ -45,7 +44,7 @@ class FeatureDiscovery extends StatefulWidget {
   /// implemented internally, to be called when the user taps outside a feature.
   static void dismiss(BuildContext context) {
     _FeatureDiscoveryState state =
-        context.ancestorStateOfType(new TypeMatcher<_FeatureDiscoveryState>())
+        context.ancestorStateOfType(TypeMatcher<_FeatureDiscoveryState>())
             as _FeatureDiscoveryState;
     state.dismiss();
   }
@@ -57,7 +56,7 @@ class FeatureDiscovery extends StatefulWidget {
   });
 
   @override
-  _FeatureDiscoveryState createState() => new _FeatureDiscoveryState();
+  _FeatureDiscoveryState createState() => _FeatureDiscoveryState();
 }
 
 class _FeatureDiscoveryState extends State<FeatureDiscovery> {
@@ -75,8 +74,7 @@ class _FeatureDiscoveryState extends State<FeatureDiscovery> {
     if (steps != null && steps[activeStepIndex] == stepId) {
       setState(() {
         ++activeStepIndex;
-        if (activeStepIndex >= steps.length)
-          _cleanupAfterSteps();
+        if (activeStepIndex >= steps.length) _cleanupAfterSteps();
       });
     }
   }
@@ -94,7 +92,7 @@ class _FeatureDiscoveryState extends State<FeatureDiscovery> {
 
   @override
   Widget build(BuildContext context) {
-    return new _InheritedFeatureDiscovery(
+    return _InheritedFeatureDiscovery(
       activeStepId: steps?.elementAt(activeStepIndex),
       child: widget.child,
     );
@@ -136,10 +134,11 @@ class DescribedFeatureOverlay extends StatefulWidget {
 
   @override
   _DescribedFeatureOverlayState createState() =>
-      new _DescribedFeatureOverlayState();
+      _DescribedFeatureOverlayState();
 }
 
-class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> with TickerProviderStateMixin {
+class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay>
+    with TickerProviderStateMixin {
   Size screenSize;
   bool showOverlay = false;
   _OverlayState state = _OverlayState.closed;
@@ -157,7 +156,7 @@ class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> with 
   }
 
   void initAnimationControllers() {
-    openController = new AnimationController(
+    openController = AnimationController(
       duration: const Duration(milliseconds: 250),
       vsync: this,
     )
@@ -172,7 +171,7 @@ class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> with 
         }
       });
 
-    pulseController = new AnimationController(
+    pulseController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     )
@@ -187,7 +186,7 @@ class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> with 
         }
       });
 
-    activationController = new AnimationController(
+    activationController = AnimationController(
       duration: const Duration(milliseconds: 250),
       vsync: this,
     )
@@ -208,7 +207,7 @@ class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> with 
         }
       });
 
-    dismissController = new AnimationController(
+    dismissController = AnimationController(
       duration: const Duration(milliseconds: 250),
       vsync: this,
     )
@@ -234,8 +233,7 @@ class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> with 
   void showOverlayIfActiveStep() {
     String activeStep = FeatureDiscovery.activeStep(context);
     setState(() => showOverlay = activeStep == widget.featureId);
-    if (activeStep == widget.featureId)
-      openController.forward(from: 0.0);
+    if (activeStep == widget.featureId) openController.forward(from: 0.0);
   }
 
   void activate() {
@@ -249,24 +247,24 @@ class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> with 
   }
 
   Widget buildOverlay(Offset anchor) {
-    return new Stack(
+    return Stack(
       children: <Widget>[
-        new GestureDetector(
+        GestureDetector(
           onTap: dismiss,
-          child: new Container(
+          child: Container(
             width: double.infinity,
             height: double.infinity,
             color: Colors.transparent,
           ),
         ),
-        new _Background(
+        _Background(
           state: state,
           transitionPercent: transitionPercent,
           anchor: anchor,
           color: widget.color,
           screenSize: screenSize,
         ),
-        new _Content(
+        _Content(
           state: state,
           transitionPercent: transitionPercent,
           anchor: anchor,
@@ -276,12 +274,12 @@ class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> with 
           touchTargetRadius: 44.0,
           touchTargetToContentPadding: 20.0,
         ),
-        new _Pulse(
+        _Pulse(
           state: state,
           transitionPercent: transitionPercent,
           anchor: anchor,
         ),
-        new _TouchTarget(
+        _TouchTarget(
           state: state,
           transitionPercent: transitionPercent,
           anchor: anchor,
@@ -295,9 +293,9 @@ class _DescribedFeatureOverlayState extends State<DescribedFeatureOverlay> with 
 
   @override
   Widget build(BuildContext context) {
-    return new AnchoredOverlay(
+    return AnchoredOverlay(
       showOverlay: showOverlay,
-      overlayBuilder: (BuildContext context, Offset anchor) {
+      overlayBuilder: (BuildContext context, Rect anchorBounds, Offset anchor) {
         return buildOverlay(anchor);
       },
       child: widget.child,
@@ -338,7 +336,7 @@ class _Background extends StatelessWidget {
       return anchor;
     } else {
       final startingBackgroundPosition = anchor;
-      final endingBackgroundPosition = new Offset(
+      final endingBackgroundPosition = Offset(
           screenSize.width / 2.0 +
               (isOnLeftHalfOfScreen(anchor) ? -20.0 : 20.0),
           anchor.dy +
@@ -403,13 +401,13 @@ class _Background extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (state == _OverlayState.closed) return new Container();
-    return new CenterAbout(
+    if (state == _OverlayState.closed) return Container();
+    return CenterAbout(
       position: backgroundPosition(),
-      child: new Container(
+      child: Container(
         width: 2 * radius(),
         height: 2 * radius(),
-        decoration: new BoxDecoration(
+        decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: color.withOpacity(backgroundOpacity()),
         ),
@@ -488,36 +486,37 @@ class _Content extends StatelessWidget {
         contentOrientation == DescribedFeatureContentOrientation.below
             ? 1.0
             : -1.0;
-    final contentY = anchor.dy + (contentOffsetMultiplier * (touchTargetRadius + 20.0));
+    final contentY =
+        anchor.dy + (contentOffsetMultiplier * (touchTargetRadius + 20.0));
     final contentFractionalOffset = contentOffsetMultiplier.clamp(-1.0, 0.0);
-    return new Positioned(
+    return Positioned(
         top: contentY,
-        child: new FractionalTranslation(
-          translation: new Offset(0.0, contentFractionalOffset),
-          child: new Opacity(
+        child: FractionalTranslation(
+          translation: Offset(0.0, contentFractionalOffset),
+          child: Opacity(
             opacity: opacity(),
-            child: new Container(
+            child: Container(
               width: screenSize.width,
-              child: new Material(
+              child: Material(
                   color: Colors.transparent,
-                  child: new Padding(
+                  child: Padding(
                       padding: const EdgeInsets.only(left: 40.0, right: 40.0),
-                      child: new Column(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          new Padding(
+                          Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
-                            child: new Text(
+                            child: Text(
                               title,
-                              style: new TextStyle(
+                              style: TextStyle(
                                 fontSize: 20.0,
                                 color: Colors.white,
                               ),
                             ),
                           ),
-                          new Text(
+                          Text(
                             description,
-                            style: new TextStyle(
+                            style: TextStyle(
                               fontSize: 16.0,
                               color: Colors.white.withOpacity(0.9),
                             ),
@@ -575,13 +574,13 @@ class _Pulse extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (state == _OverlayState.closed) return new Container();
-    return new CenterAbout(
+    if (state == _OverlayState.closed) return Container();
+    return CenterAbout(
       position: anchor,
-      child: new Container(
+      child: Container(
         width: radius() * 2,
         height: radius() * 2,
-        decoration: new BoxDecoration(
+        decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.white.withOpacity(opacity()),
         ),
@@ -648,17 +647,17 @@ class _TouchTarget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return new CenterAbout(
+    return CenterAbout(
       position: anchor,
-      child: new Container(
+      child: Container(
         width: 2 * radius(),
         height: 2 * radius(),
-        child: new Opacity(
+        child: Opacity(
           opacity: opacity(),
-          child: new RawMaterialButton(
-            shape: new CircleBorder(),
+          child: RawMaterialButton(
+            shape: CircleBorder(),
             fillColor: Colors.white,
-            child: new Icon(
+            child: Icon(
               icon,
               color: color,
             ),
