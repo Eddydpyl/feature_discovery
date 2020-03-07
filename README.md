@@ -1,4 +1,4 @@
-# Feature Discovery ![Status: abandoned](https://img.shields.io/badge/status-abandoned-red.svg)
+# Feature Discovery [![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause) ![Status: abandoned](https://img.shields.io/badge/status-abandoned-red.svg)
 
 Implementation of the material design pattern for [feature discovery](https://material.io/archive/guidelines/growth-communications/feature-discovery.html) by [Matthew Carroll](https://github.com/matthew-carroll).
 Import into your project by adding the following dependency:
